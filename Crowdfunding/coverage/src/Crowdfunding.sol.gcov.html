@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - src/Crowdfunding.sol</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../index.html" title="Click to go to top-level">top level</a> - <a href="index.html" title="Click to go to directory src">src</a> - Crowdfunding.sol<span style="font-size: 80%;"> (source / <a href="Crowdfunding.sol.func-c.html" title="Click to go to function table">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">26</td>
+            <td class="headerCovTableEntry">26</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2025-03-07 17:08:06</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntryHi">100.0&nbsp;%</td>
+            <td class="headerCovTableEntry">18</td>
+            <td class="headerCovTableEntry">18</td>
+          </tr>
+                  <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">             Branch data     Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>                 :             : // SPDX-License-Identifier: (c) RareSkills</span>
+<span id="L2"><span class="lineNum">       2</span>                 :             : pragma solidity 0.8.28;</span>
+<span id="L3"><span class="lineNum">       3</span>                 :             : </span>
+<span id="L4"><span class="lineNum">       4</span>                 :             : import {IERC20} from &quot;@openzeppelin/contracts/token/ERC20/IERC20.sol&quot;;</span>
+<span id="L5"><span class="lineNum">       5</span>                 :             : import {SafeERC20} from &quot;@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol&quot;;</span>
+<span id="L6"><span class="lineNum">       6</span>                 :             : </span>
+<span id="L7"><span class="lineNum">       7</span>                 :             : contract Crowdfunding {</span>
+<span id="L8"><span class="lineNum">       8</span>                 :             :     using SafeERC20 for IERC20;</span>
+<span id="L9"><span class="lineNum">       9</span>                 :             :     IERC20 public immutable token;</span>
+<span id="L10"><span class="lineNum">      10</span>                 :             :     address public immutable beneficiary;</span>
+<span id="L11"><span class="lineNum">      11</span>                 :             :     uint256 public immutable fundingGoal;</span>
+<span id="L12"><span class="lineNum">      12</span>                 :             :     uint256 public immutable deadline;</span>
+<span id="L13"><span class="lineNum">      13</span>                 :             : </span>
+<span id="L14"><span class="lineNum">      14</span>                 :             :     mapping(address =&gt; uint256) public contributions;</span>
+<span id="L15"><span class="lineNum">      15</span>                 :             : </span>
+<span id="L16"><span class="lineNum">      16</span>                 :             :     event Contribution(address indexed contributor, uint256 amount);</span>
+<span id="L17"><span class="lineNum">      17</span>                 :             :     event CancelContribution(address indexed contributor, uint256 amount);</span>
+<span id="L18"><span class="lineNum">      18</span>                 :             :     event Withdrawal(address indexed beneficiary, uint256 amount);</span>
+<span id="L19"><span class="lineNum">      19</span>                 :             : </span>
+<span id="L20"><span class="lineNum">      20</span>                 :<span class="tlaGNC tlaBgGNC">          17 :     constructor(address token_, address beneficiary_, uint256 fundingGoal_, uint256 deadline_) {</span></span>
+<span id="L21"><span class="lineNum">      21</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 16 times"> + </span>]:<span class="tlaGNC">          17 :         require(token_ != address(0), &quot;Token address cannot be 0&quot;);</span></span>
+<span id="L22"><span class="lineNum">      22</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 15 times"> + </span>]:<span class="tlaGNC">          16 :         require(beneficiary_ != address(0), &quot;Beneficiary address cannot be 0&quot;);</span></span>
+<span id="L23"><span class="lineNum">      23</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 14 times"> + </span>]:<span class="tlaGNC">          15 :         require(fundingGoal_ &gt; 0, &quot;Funding goal must be greater than 0&quot;);</span></span>
+<span id="L24"><span class="lineNum">      24</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 13 times"> + </span>]:<span class="tlaGNC">          14 :         require(deadline_ &gt; block.timestamp, &quot;Deadline must be in the future&quot;);</span></span>
+<span id="L25"><span class="lineNum">      25</span>                 :             : </span>
+<span id="L26"><span class="lineNum">      26</span>                 :<span class="tlaGNC">          13 :         token = IERC20(token_);</span></span>
+<span id="L27"><span class="lineNum">      27</span>                 :<span class="tlaGNC">          13 :         beneficiary = beneficiary_;</span></span>
+<span id="L28"><span class="lineNum">      28</span>                 :<span class="tlaGNC">          13 :         fundingGoal = fundingGoal_;</span></span>
+<span id="L29"><span class="lineNum">      29</span>                 :<span class="tlaGNC">          13 :         deadline = deadline_;</span></span>
+<span id="L30"><span class="lineNum">      30</span>                 :             :     }</span>
+<span id="L31"><span class="lineNum">      31</span>                 :             : </span>
+<span id="L32"><span class="lineNum">      32</span>                 :<span class="tlaGNC">           8 :     function contribute(uint256 amount) external {</span></span>
+<span id="L33"><span class="lineNum">      33</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 7 times"> + </span>]:<span class="tlaGNC">           8 :         require(block.timestamp &lt; deadline, &quot;Contribution period over&quot;);</span></span>
+<span id="L34"><span class="lineNum">      34</span>                 :             : </span>
+<span id="L35"><span class="lineNum">      35</span>                 :<span class="tlaGNC">           7 :         token.safeTransferFrom(msg.sender, address(this), amount);</span></span>
+<span id="L36"><span class="lineNum">      36</span>                 :             : </span>
+<span id="L37"><span class="lineNum">      37</span>                 :<span class="tlaGNC">           7 :         contributions[msg.sender] += amount;</span></span>
+<span id="L38"><span class="lineNum">      38</span>                 :<span class="tlaGNC">           7 :         emit Contribution(msg.sender, amount);</span></span>
+<span id="L39"><span class="lineNum">      39</span>                 :             :     }</span>
+<span id="L40"><span class="lineNum">      40</span>                 :             : </span>
+<span id="L41"><span class="lineNum">      41</span>                 :             :     /*</span>
+<span id="L42"><span class="lineNum">      42</span>                 :             :      * @notice a contribution can be cancelled if the goal is not reached. Returns the tokens to the contributor.</span>
+<span id="L43"><span class="lineNum">      43</span>                 :             :      */ </span>
+<span id="L44"><span class="lineNum">      44</span>                 :<span class="tlaGNC">           2 :     function cancelContribution() external {</span></span>
+<span id="L45"><span class="lineNum">      45</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         require(token.balanceOf(address(this)) &lt; fundingGoal, &quot;Cannot cancel after goal reached&quot;);</span></span>
+<span id="L46"><span class="lineNum">      46</span>                 :             : </span>
+<span id="L47"><span class="lineNum">      47</span>                 :<span class="tlaGNC">           1 :         uint256 contributedAmount = contributions[msg.sender];</span></span>
+<span id="L48"><span class="lineNum">      48</span>                 :<span class="tlaGNC">           1 :         contributions[msg.sender] = 0; // Reset the contribution amount to zero</span></span>
+<span id="L49"><span class="lineNum">      49</span>                 :             : </span>
+<span id="L50"><span class="lineNum">      50</span>                 :<span class="tlaGNC">           1 :         token.safeTransfer(msg.sender, contributedAmount);</span></span>
+<span id="L51"><span class="lineNum">      51</span>                 :<span class="tlaGNC">           1 :         emit CancelContribution(msg.sender, contributedAmount);</span></span>
+<span id="L52"><span class="lineNum">      52</span>                 :             :     }</span>
+<span id="L53"><span class="lineNum">      53</span>                 :             : </span>
+<span id="L54"><span class="lineNum">      54</span>                 :             :     /*</span>
+<span id="L55"><span class="lineNum">      55</span>                 :             :      * @notice the beneficiary can withdraw the funds if the goal is reached.</span>
+<span id="L56"><span class="lineNum">      56</span>                 :             :      */</span>
+<span id="L57"><span class="lineNum">      57</span>                 :<span class="tlaGNC">           4 :     function withdraw() external {</span></span>
+<span id="L58"><span class="lineNum">      58</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 3 times"> + </span>]:<span class="tlaGNC">           4 :         require(msg.sender == beneficiary, &quot;Only beneficiary can withdraw&quot;);</span></span>
+<span id="L59"><span class="lineNum">      59</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 2 times"> + </span>]:<span class="tlaGNC">           3 :         require(block.timestamp &gt;= deadline, &quot;Funding period not over&quot;);</span></span>
+<span id="L60"><span class="lineNum">      60</span>         [<span class="tlaGBC" title="Branch 0 was taken 1 time"> + </span><span class="tlaGBC" title="Branch 1 was taken 1 time"> + </span>]:<span class="tlaGNC">           2 :         require(token.balanceOf(address(this)) &gt;= fundingGoal, &quot;Funding goal not reached&quot;);</span></span>
+<span id="L61"><span class="lineNum">      61</span>                 :             : </span>
+<span id="L62"><span class="lineNum">      62</span>                 :<span class="tlaGNC">           1 :         token.safeTransfer(beneficiary, token.balanceOf(address(this)));</span></span>
+<span id="L63"><span class="lineNum">      63</span>                 :<span class="tlaGNC">           1 :         emit Withdrawal(beneficiary, token.balanceOf(address(this)));</span></span>
+<span id="L64"><span class="lineNum">      64</span>                 :             :     }</span>
+<span id="L65"><span class="lineNum">      65</span>                 :             : }</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.1-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
