@@ -32,6 +32,12 @@ contract OraclePool is Ownable2Step {
         address _stablecoin,
         uint256 _feeBasisPoints,
         uint256 _ethToUSDRate) Ownable(msg.sender) {
+            WETH = IERC20(_weth);
+            STABLECOIN = IERC20(_stablecoin);
+            feeBasisPoints = _feeBasisPoints;
+            ethToUSDRate = _ethToUSDRate;
+
+            emit ExchangeRateUpdated(0, _ethToUSDRate);
     }
 
     /*
@@ -44,6 +50,20 @@ contract OraclePool is Ownable2Step {
      * @return amountOut The amount of WETH the user received.
      */
     function buyWETH(uint256 amountStableIn, uint256 amountOutMin) external returns (uint256 amountOut) {
+        uint256 grossOut = amountStableIn * 10**20 / ethToUSDRate;
+
+
+        // uint256 grossOut = (amountStableIn * 10**8 * 10**18) / (ethToUSDRate * 10**6);
+        uint256 netOut = grossOut * (10000 - feeBasisPoints) / 10000;
+
+        if (netOut < amountOutMin) revert Slippage();
+        STABLECOIN.safeTransferFrom(msg.sender, address(this), amountStableIn);
+        WETH.transfer(msg.sender, netOut);
+
+        emit SwapStableToWeth(msg.sender, amountStableIn, netOut);
+
+
+        return netOut;
     }
 
     /* 
@@ -56,8 +76,23 @@ contract OraclePool is Ownable2Step {
      * @return amountOut The amount of stablecoin the user received.
      */
     function sellWETH(uint256 amountWethIn, uint256 amountOutMin) external returns (uint256 amountOut) {
+        uint256 grossAmount = amountWethIn * ethToUSDRate * 10**6 / 10**26;
+        uint256 netOut = grossAmount * (10000 - feeBasisPoints) / 10000;
+
+        if (netOut < amountOutMin) revert Slippage();
+
+        WETH.safeTransferFrom(msg.sender, address(this), amountWethIn);
+        STABLECOIN.transfer(msg.sender, netOut);
+
+        emit SwapWethToStable(msg.sender, amountWethIn, netOut);
+
+        return netOut;
     }
 
     function setExchangeRate(uint256 _ethToUSDRate) external onlyOwner {
+        uint oldRate = ethToUSDRate;
+        ethToUSDRate = _ethToUSDRate;
+
+        emit ExchangeRateUpdated(oldRate, ethToUSDRate);
     }
 }
