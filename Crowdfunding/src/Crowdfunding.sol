@@ -18,7 +18,15 @@ contract Crowdfunding {
     event Withdrawal(address indexed beneficiary, uint256 amount);
 
     constructor(address token_, address beneficiary_, uint256 fundingGoal_, uint256 deadline_) {
+        require(deadline_ > block.timestamp, "Deadline must be in the future");
+        require(beneficiary_ != address(0), "Beneficiary address cannot be 0");
+        require(fundingGoal_ > 0, "Funding goal must be greater than 0");
+        require(address(token_) != address(0), "Token address cannot be 0");
 
+        token = IERC20(token_);
+        beneficiary = beneficiary_;
+        fundingGoal = fundingGoal_;
+        deadline = deadline_;
     }
 
     /*
@@ -26,17 +34,40 @@ contract Crowdfunding {
      * @param amount the amount of tokens to contribute.
      */
     function contribute(uint256 amount) external {
+        require(block.timestamp < deadline, "Contribution period over");
+        contributions[msg.sender] += amount;
+
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        
+        emit Contribution(msg.sender, amount);
     }
 
     /*
      * @notice a contribution can be cancelled if the goal is not reached. Returns the tokens to the contributor.
      */ 
     function cancelContribution() external {
+        require(token.balanceOf(address(this)) < fundingGoal, "Cannot cancel after goal reached");
+
+        uint256 contributedAmount = contributions[msg.sender];
+        
+        if (contributedAmount > 0) {
+            contributions[msg.sender] = 0;
+            token.safeTransfer(msg.sender, contributedAmount);
+        }
+
+        emit CancelContribution(msg.sender, contributedAmount);
     }
 
     /*
      * @notice the beneficiary can withdraw the funds if the goal is reached.
      */
     function withdraw() external {
+        require(msg.sender == beneficiary, "Only beneficiary can withdraw");
+        require(block.timestamp >= deadline, "Funding period not over");
+        require(token.balanceOf(address(this)) >= fundingGoal, "Funding goal not reached");
+        
+        token.transfer(beneficiary, fundingGoal);
+
+        emit Withdrawal(beneficiary, fundingGoal);
     }
 }
