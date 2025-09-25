@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {console} from "forge-std/console.sol";
 
 // If someone wants to sell a token, they create a dutch auction using the linear dutch auction factory.
 // In a single transaction, the factory creates the auction and the token is transferred from the user to the auction.
@@ -18,6 +19,18 @@ contract LinearDutchAuctionFactory {
         uint256 _amount,
         address _seller
     ) external returns (address) {
+        require(_duration > 0);
+        require(_startTime >= block.timestamp);
+        require(_startingPriceEther > 0);
+        require(_seller != address(0));
+
+        LinearDutchAuction auction =  new LinearDutchAuction(_token, _startingPriceEther, _startTime, _duration, _seller);
+        address addressAuction = address(auction);
+
+        _token.safeTransferFrom(msg.sender, addressAuction, _amount);
+
+        emit AuctionCreated(addressAuction, address(_token), _startingPriceEther, _startTime, _duration, _amount, _seller);
+        return address(addressAuction);
     }
 }
 
@@ -35,6 +48,9 @@ contract LinearDutchAuction {
     uint256 public immutable startTime;
     uint256 public immutable durationSeconds;
     address public immutable seller;
+
+    uint256 private actualPrice;
+    bool private isPurchased;
 
     error AuctionNotStarted();
     error MsgValueInsufficient();
@@ -55,6 +71,12 @@ contract LinearDutchAuction {
         uint256 _durationSeconds,
         address _seller
     ) {
+        token = _token;
+        startingPriceEther = _startingPriceEther;
+        startTime =_startTime;
+        durationSeconds = _durationSeconds;
+        seller = _seller;
+        actualPrice = _startingPriceEther;
     }
 
     /*
@@ -64,7 +86,21 @@ contract LinearDutchAuction {
      * @revert if someone already purchased the token
      * @return the current price of the token in Ether
      */ 
+    function calculateCurrentPrice() internal view returns (uint256) {
+        uint passedTime = block.timestamp - startTime;
+
+        uint amountToPay = startingPriceEther - startingPriceEther * passedTime / durationSeconds;
+        return amountToPay;
+    }
+
     function currentPrice() public view returns (uint256) {
+        if (isPurchased) revert();
+
+        uint256 currentTime = block.timestamp;
+        if (currentTime < startTime) revert AuctionNotStarted();
+        if (currentTime > startTime + durationSeconds) return 0;
+
+        return calculateCurrentPrice();
     }
 
     /*
@@ -76,5 +112,25 @@ contract LinearDutchAuction {
      * @dev Will try to refund the user if they send too much ether. If the refund reverts, the transaction still succeeds.
      */
     receive() external payable {
+        require(!isPurchased);
+
+        uint256 currentTime = block.timestamp;
+        uint256 calculatedPrice = calculateCurrentPrice();
+
+        // Will revert if not enough balance
+        uint256 remainder = msg.value - calculateCurrentPrice();
+
+        if (currentTime < startTime) revert AuctionNotStarted();
+        if (currentTime > startTime + durationSeconds) revert();
+
+        uint balance = token.balanceOf(address(this));
+        token.transfer(msg.sender, balance);
+
+        payable(seller).transfer(calculatedPrice);
+
+        if (remainder > 0) {
+            payable(msg.sender).transfer(remainder);
+        }
+
     }
 }
