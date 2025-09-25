@@ -64,10 +64,12 @@ contract Crowdfunding {
     function withdraw() external {
         require(msg.sender == beneficiary, "Only beneficiary can withdraw");
         require(block.timestamp >= deadline, "Funding period not over");
-        require(token.balanceOf(address(this)) >= fundingGoal, "Funding goal not reached");
-        
-        token.transfer(beneficiary, fundingGoal);
 
-        emit Withdrawal(beneficiary, fundingGoal);
+        uint256 balance = token.balanceOf(address(this));
+        require(balance >= fundingGoal, "Funding goal not reached");
+        
+        token.safeTransfer(beneficiary, balance);
+
+        emit Withdrawal(beneficiary, balance);
     }
 }
